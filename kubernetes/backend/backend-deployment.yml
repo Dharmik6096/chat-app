@@ -3,30 +3,53 @@ kind: Deployment
 metadata:
   name: chatapp-backend-deployment
   namespace: chat-app
+
 spec:
   replicas: 2
+
   selector:
     matchLabels:
       app: backend
+
   template:
     metadata:
       labels:
         app: backend
+
     spec:
       containers:
       - name: backend
         image: dp04/chatapp-backend:latest
+
         ports:
         - containerPort: 5001
+
         env:
         - name: NODE_ENV
           value: "production"
+
         - name: PORT
           value: "5001"
+
         - name: MONGODB_URI
           value: "mongodb://root:admin@mongodb-svc:27017/chatapp?authSource=admin"
+
         - name: JWT_SECRET
           valueFrom:
-           secretKeyRef:
+            secretKeyRef:
               name: chatapp-secret
               key: jwt
+
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5001
+          initialDelaySeconds: 15
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 20
